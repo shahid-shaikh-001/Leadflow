@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ServiceType {
+  SERVICE_1
+  SERVICE_2
+  SERVICE_3
+}
+
+model Provider {
+  id            Int      @id
+  name          String
+  monthlyQuota  Int      @default(10)
+  leadsReceived Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  assignments LeadAssignment[]
+}
+
+model Lead {
+  id          String      @id @default(cuid())
+  name        String
+  phone       String
+  city        String
+  serviceType ServiceType
+  description String
+  createdAt   DateTime    @default(now())
+
+  assignments LeadAssignment[]
+
+  @@unique([phone, serviceType])
+}
+
+model LeadAssignment {
+  id         String   @id @default(cuid())
+  leadId     String
+  providerId Int
+  createdAt  DateTime @default(now())
+
+  lead     Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, providerId])
+}
+
+model AllocationState {
+  id           String      @id @default(cuid())
+  serviceType  ServiceType @unique
+  currentIndex Int         @default(0)
+  updatedAt    DateTime    @updatedAt
+}
+
+model ProcessedWebhook {
+  id          String   @id
+  type        String
+  processedAt DateTime @default(now())
+}
